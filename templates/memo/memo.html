@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" href="./static/sticky-note.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="templates/memo/memo.css">
+    <title>imemo - notes</title>
+</head>
+<body>
+    <button id="install-button" style="display: none;">Install App</button>
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="note-container">
+                <a id="hide-sidebar-button" style="font-size: 18px;flex-direction: column;background: #202f2d;">
+                    <i class="fas fa-bars" style="margin-right: 8px;"></i>
+                </a>
+                <a href="#" id="new-note-button" style="background-color: #428780;font-size: 17px;">
+                    <i class="fas fa-leaf" style="margin-right: 8px;font-size: 21px;"></i>Create Note
+                </a>
+                <div class="textfile-container">
+                    <div class="scrollable-container">
+                        {% for filename in note_files %}
+                        <a class="note-link" href="#" data-filename="{{ filename }}">
+                            <i class="fab fa-pagelines" style="margin-right: 8px; font-size: 17px;"></i> {{ filename }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            <a class="logout-button" id="logout" href="/logout" style="background-color: #428780; font-size: 14px;">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
+        </div>
+
+
+        <!-- Main content -->
+        <div class="content" id="content">
+            <div class="top-bar", id="top-bar">
+                <a id="show-sidebar-button" style="color: #428780; cursor: pointer; font-size: 25px; display: none;"><i class="fas fa-bars"></i></a>
+                <div class="top-bar-buttons">
+                    <button id="sync-button" class="icon-button"><i class="fas fa-redo"></i></button>
+                    <button id="save-button" class="icon-button"><i class="fas fa-save"></i> </button>
+                    <button id="rename-button" class="icon-button"><i class="fas fa-edit"></i> </button>
+                    <button id="link-button" class="icon-button" style="background-color: #428780;"><i class="fas fa-external-link-alt"></i></button>
+                    <button id="delete-button" class="icon-button" style="background-color: #a8223f;"><i class="fas fa-trash-alt"></i></button>
+                </div>
+            </div>
+
+            <div class="notepad">
+                <textarea id="note-textarea" placeholder="Start typing your note..." rows="40">WELCOME TO IMEMO 📓 V.0.0.2 BETA
+✒️ New Updates:
+1️⃣ Optimized Animation for mobile users.
+2️⃣ Implemented Nature Theme!.
+✅ TO START : click create note or click the file you want to edit</textarea>
+            </div>
+        </div>
+
+        <div id="new-note-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-modal">&times;</span>
+                <h2>Create a New Note</h2>
+                <div class="input-wrapper">
+                    <input type="text" id="note-title" placeholder="Enter title">
+                    <button id="create-note-button">Create</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="rename-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-rename-modal">&times;</span>
+                <h2>Rename File</h2>
+                <div class="input-wrapper">
+                    <input type="text" id="new-filename" placeholder="Enter new filename">
+                    <button id="rename-confirm-button">Rename</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="confirmation-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-confirmation-modal">&times;</span>
+                <h2>Delete File</h2>
+                <p id="confirmation-message"></p>
+                <div class="button-container">
+                    <button id="confirm-delete-button">Confirm</button>
+                    <button id="cancel-delete-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="autosave-failed-popup" class="modal">
+            <div class="modal-content">
+                <span class="close-button" id="close-autosave-failed-popup">&times;</span>
+                <h2>Autosave Failed</h2>
+                <p>Autosave failed. Please click the manual save button to save your progress.</p>
+            </div>
+        </div>
+
+        <div id="url-modal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <span class="close-button" id="close-url-modal" onclick="closeURLModal()">&times;</span>
+                <h2>Detected URLs</h2>
+                <div id="url-list"></div>
+            </div>
+        </div>
+
+    <script src="templates/memo/memo.js"></script> 
+</body>
+</html>

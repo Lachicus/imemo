@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="./manifest.json">
+    <title>imemo - Login</title>
+    <link rel="icon" type="image/png" href="./static/sticky-note.png">
+    <!-- Add Bootstrap CSS link for dark mode -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="templates/authcode/authcode.css">
+</head>
+<body>
+    <button id="install-button" style="display: none;">Install App</button>
+    <div class="login-container">
+        <div class="login-card">
+          <h2 class="text-center mb-4"><i class="fas fa-leaf" style="color: #3ba239;"></i> Login</h2>
+
+            <!-- Add a hidden alert div -->
+            <div class="alert alert-danger alert-dismissible fade show" id="alert" style="display: none;" role="alert">
+                Authentication failed. Please try again.
+                <button type="button" class="close-button" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="alert alert-primary" id="authenticating" style="display: none;" role="alert">
+                <i class="fa-solid fa-spinner fa-spin" style="font: "></i>  Authenticating...
+                
+            </div>
+          
+            <form method="POST" action="/authenticate">
+                <div class="mb-3">
+                    <label for="passcode_input" class="form-label">Enter Passcode</label>
+                    <input type="password" class="form-control" id="passcode_input" name="passcode_input" placeholder="Enter your passcode">
+                </div>
+                <button type="submit" id="submitButton" class="btn btn-login btn-block">Submit</button>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="templates/authcode/authcode.js"></script> 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            {% if alert %}
+                document.getElementById('alert').style.display = 'block';
+                document.querySelector('.alert-primary').style.display = 'none';
+
+                // Add click event listener to close button
+                document.querySelector('.close-button').addEventListener('click', function() {
+                    document.getElementById('alert').style.display = 'none';
+                });
+            {% endif %}
+        });
+    </script>
+
+    <!-- Add Bootstrap JS and Popper.js (if needed) links -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@2.9.3/dist/umd/popper.min.js"></script>
+</body>
+</html>

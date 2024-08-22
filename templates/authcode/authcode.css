@@ -1,0 +1,58 @@
+body {
+    background-color: #121212; /* Dark background color */
+    color: #fff; /* Text color */
+}
+
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.login-card {
+    background-color: #222; /* Container background color */
+    padding: 20px;
+    border-radius: 8px; /* Rounded corners for the container */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Box shadow for the card-like effect */
+    min-width: 400px;
+    max-width: 700px; /* Limit the card's width */
+    margin: 0 auto; /* Center the card horizontally */
+}
+
+.form-label {
+    color: #fff; /* Label text color */
+}
+
+.form-control {
+    background-color: #333; /* Input background color */
+    color: #fff; /* Input text color */
+    border: none;
+}
+
+.btn-login {
+    background-color: #428780; /* Purple button background color */
+    border: none;
+    color: #f0f5f4
+}
+
+.btn-login:hover {
+    background-color: #336b65; /* Darker purple button background color on hover */
+}
+
+/* Add styles for the custom close button */
+.close-button {
+    background: none;
+    border: none;
+    color: #747375;
+    font-size: 20px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    outline: none;
+}
+
+.close-button:hover {
+    color: #ff3333; /* Change the color on hover */
+}
