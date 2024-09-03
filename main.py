@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 import os
 from dotenv import load_dotenv
-# NEW
 import firebase_admin
-from firebase_admin import credentials, firestore, storage
-# END NEW
+from firebase_admin import credentials, firestore
+
 load_dotenv()
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
@@ -31,19 +30,23 @@ db = firestore.client()
 passcode = os.environ.get('passcode')
 app.secret_key = os.environ.get('encrypted_key')
 
+def check_authentication():
+    """Helper function to check if user is authenticated"""
+    return session.get('authenticated')
+
 @app.route('/notes')
 def notes():
-    if session.get('authenticated'):
-        notes_ref = db.collection('notes')
-        notes = notes_ref.stream()
-        note_files = [note.id for note in notes]
-        return render_template('memo/memo.html', note_files=note_files)
-    else:
+    if not check_authentication():
         return redirect(url_for('index'))
+    
+    notes_ref = db.collection('notes')
+    notes = notes_ref.stream()
+    note_files = [note.id for note in notes]
+    return render_template('memo/memo.html', note_files=note_files)
 
 @app.route('/')
 def index():
-    if session.get('authenticated'):
+    if check_authentication():
         # Redirect authenticated users to the notes page
         return redirect(url_for('notes'))
     else:
@@ -52,14 +55,10 @@ def index():
 @app.route('/authenticate', methods=['POST'])
 def authenticate():
     user_input = request.form['passcode_input']
-    print(passcode)
     if user_input == passcode:
         session['authenticated'] = True
-        
-        print("AUTHENTICATION SUCCESS!!!")
         return redirect(url_for('notes'))
     else:
-        print("AUTHENTICATION FAILED!")
         return render_template('authcode/authcode.html', alert=True)
 
 @app.route('/logout')
@@ -70,6 +69,9 @@ def logout():
 
 @app.route('/load-file')
 def load_file():
+    if not check_authentication():
+        return redirect(url_for('index'))
+    
     filename = request.args.get('filename')
     note_ref = db.collection('notes').document(filename)
     note = note_ref.get()
@@ -80,6 +82,9 @@ def load_file():
 
 @app.route('/save-file', methods=['POST'])
 def save_file():
+    if not check_authentication():
+        return redirect(url_for('index'))
+    
     filename = request.args.get('filename')
     content = request.data.decode('utf-8')
 
@@ -92,6 +97,9 @@ def save_file():
 
 @app.route('/create_note', methods=['POST'])
 def create_note():
+    if not check_authentication():
+        return redirect(url_for('index'))
+    
     data = request.get_json()
     title = data.get('title')
 
@@ -104,6 +112,9 @@ def create_note():
 
 @app.route('/rename-file')
 def rename_file():
+    if not check_authentication():
+        return redirect(url_for('index'))
+    
     old_filename = request.args.get('oldFilename')
     new_filename = request.args.get('newFilename')
 
@@ -123,6 +134,9 @@ def rename_file():
 
 @app.route('/delete-file')
 def delete_file():
+    if not check_authentication():
+        return redirect(url_for('index'))
+    
     filename = request.args.get('filename')
     note_ref = db.collection('notes').document(filename)
 
