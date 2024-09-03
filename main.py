@@ -52,10 +52,14 @@ def index():
 @app.route('/authenticate', methods=['POST'])
 def authenticate():
     user_input = request.form['passcode_input']
+    print(passcode)
     if user_input == passcode:
         session['authenticated'] = True
+        
+        print("AUTHENTICATION SUCCESS!!!")
         return redirect(url_for('notes'))
     else:
+        print("AUTHENTICATION FAILED!")
         return render_template('authcode/authcode.html', alert=True)
 
 @app.route('/logout')
