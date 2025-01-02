@@ -2,7 +2,7 @@
   "name": "imemo",
   "short_name": "notes",
   "description": "personal pocket notebook",
-  "start_url": "https://imemo.rafaellachica.repl.co/",
+  "start_url": "https://imemo.vercel.app",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",
