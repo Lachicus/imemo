@@ -28,11 +28,13 @@ pip (Python package installer)
 Installation
 Clone the Repository:
 
-bash
-Copy code
-git clone https://github.com/Lachicus/imemo.git
-cd imemo
-Set Up a Virtual Environment:
+``` bash
+  Copy code
+  git clone https://github.com/Lachicus/imemo.git
+  cd imemo
+  Set Up a Virtual Environment:
+
+
 
 bash
 Copy code
