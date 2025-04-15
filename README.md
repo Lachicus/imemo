@@ -32,17 +32,17 @@ Clone the Repository:
   Copy code
   git clone https://github.com/Lachicus/imemo.git
   cd imemo
-  Set Up a Virtual Environment:
+  Set Up a Virtual Environment:~~~
+```
 
-
-
-bash
+``` bash
 Copy code
 python -m venv .venv
 Activate the Virtual Environment:
+```
 
 On Windows:
-bash
+``` bash
 Copy code
 .venv\Scripts\activate
 On macOS/Linux:
@@ -50,15 +50,13 @@ bash
 Copy code
 source .venv/bin/activate
 Install Dependencies:
+```
 
-bash
+``` bash
 Copy code
 pip install -r requirements.txt
 Run the Application:
-
-bash
-Copy code
-python main.py
+```
 
 Usage 📋
 Create a Note: Click on "Create Note" in the sidebar and enter a title.
