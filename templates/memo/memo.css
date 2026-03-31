@@ -177,7 +177,9 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    transition: margin-left var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1), transform var(--transition-speed);
+    transition: margin-left var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar-collapsed .content {
@@ -185,7 +187,8 @@ body {
 }
 
 .top-bar {
-    padding: 15px 30px;
+    padding: 20px 30px;
+    padding-top: max(20px, env(safe-area-inset-top));
     background: transparent;
     display: flex;
     justify-content: space-between;
@@ -365,16 +368,24 @@ body {
 @media screen and (max-width: 768px) {
     .sidebar {
         width: 100%;
-        transform: translateX(-100%);
     }
 
-    /* In mobile, showed sidebar covers the screen, no margin change needed */
+    /* .content should take full width unconditionally */
     .sidebar-collapsed .content {
         margin-left: 0;
     }
     
     .content {
         margin-left: 0;
+    }
+
+    .top-bar {
+        padding: 15px 20px;
+        padding-top: max(15px, env(safe-area-inset-top));
+    }
+
+    .dashboard-container {
+        padding: 30px 20px;
     }
 
     #show-sidebar-button {

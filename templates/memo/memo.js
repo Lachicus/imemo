@@ -291,6 +291,9 @@ linkButton.addEventListener('click', () => {
 
 // --- Initialize ---
 document.addEventListener('DOMContentLoaded', () => {
+    if (isMobile) {
+        document.body.classList.add('sidebar-collapsed');
+    }
     initQuill();
     showDashboard();
 });
