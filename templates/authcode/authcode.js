@@ -22,42 +22,47 @@ function submitButtonClick() {
 submitButton.addEventListener("click", submitButtonClick);
 
 let deferredPrompt;
+const installButton = document.getElementById('install-button');
+const installModal = document.getElementById('install-modal');
+const closeInstallModal = document.getElementById('close-install-modal');
+const installConfirmButton = document.getElementById('install-confirm-button');
 
 window.addEventListener('beforeinstallprompt', (e) => {
-  // Prevent the default browser prompt
   e.preventDefault();
-
-  // Store the event to show the custom prompt later
   deferredPrompt = e;
-
-  // Show your custom install button or prompt
-  // You can display this when it makes sense for your app
-  showInstallButton();
+  if (installButton) {
+    installButton.style.display = 'flex';
+  }
 });
 
-// Function to show your custom install button
-function showInstallButton() {
-  const installButton = document.getElementById('install-button');
-
-  if (installButton) {
-    installButton.style.display = 'block';
-
-    installButton.addEventListener('click', () => {
-      // Trigger the installation prompt
-      deferredPrompt.prompt();
-
-      // Wait for the user to respond to the prompt
-      deferredPrompt.userChoice.then((choiceResult) => {
-        if (choiceResult.outcome === 'accepted') {
-          console.log('User accepted the installation');
-        } else {
-          console.log('User dismissed the installation');
-        }
-
-        // Reset the deferred prompt
-        deferredPrompt = null;
-        installButton.style.display = 'none';
-      });
-    });
-  }
+if (installButton) {
+  installButton.addEventListener('click', (e) => {
+    e.preventDefault();
+    installModal.style.display = 'flex';
+  });
 }
+
+if (closeInstallModal) {
+  closeInstallModal.addEventListener('click', () => {
+    installModal.style.display = 'none';
+  });
+}
+
+if (installConfirmButton) {
+  installConfirmButton.addEventListener('click', async () => {
+    installModal.style.display = 'none';
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      if (installButton) installButton.style.display = 'none';
+    }
+    deferredPrompt = null;
+  });
+}
+
+window.addEventListener('appinstalled', () => {
+  if (installButton) installButton.style.display = 'none';
+  deferredPrompt = null;
+});

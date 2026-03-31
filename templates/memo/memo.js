@@ -1,443 +1,361 @@
-const noteLinks = document.querySelectorAll('.note-link');
-const notepadTextarea = document.getElementById('note-textarea');
-const newNoteButton = document.getElementById('new-note-button');
-const saveButton = document.getElementById('save-button');
-const isMobile = window.matchMedia("(max-width: 500px)").matches;
+
+// --- UI Elements ---
+const sidebar = document.getElementById('sidebar');
+const content = document.getElementById('content');
 const showSidebarButton = document.getElementById('show-sidebar-button');
 const hideSidebarButton = document.getElementById('hide-sidebar-button');
-const sidebar = document.getElementById('sidebar');
-const topbar = document.getElementById('top-bar');
-const content = document.getElementById('content');
+const homeButton = document.getElementById('home-button');
+const noteList = document.getElementById('note-list');
+const sidebarSearch = document.getElementById('sidebar-search');
 
+const dashboardView = document.getElementById('dashboard');
+const notepadView = document.getElementById('notepad-view');
+const editorActions = document.getElementById('editor-actions');
+
+const newNoteButton = document.getElementById('new-note-button');
+const saveButton = document.getElementById('save-button');
+const renameButton = document.getElementById('rename-button');
+const deleteButton = document.getElementById('delete-button');
+const syncButton = document.getElementById('sync-button');
+const linkButton = document.getElementById('link-button');
+
+const toastContainer = document.getElementById('toast-container');
+
+// --- Editor Initialization ---
+let quill;
+function initQuill() {
+    quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'color': [] }, { 'background': [] }],
+                ['clean'],
+                ['link']
+            ]
+        },
+        placeholder: 'Compose your masterpiece...'
+    });
+
+    // Auto-save behavior
+    quill.on('text-change', () => {
+        if (currentFilename) {
+            debounceSaveContent();
+        }
+    });
+}
+
+// --- State ---
 let currentFilename = null;
 let debounceTimer;
-const DEBOUNCE_DELAY = 1000; // 1 second delay
+const DEBOUNCE_DELAY = 1500;
+const isMobile = window.matchMedia("(max-width: 768px)").matches;
 
-function saveContent(content, filename) {
-    return fetch(`/save-file?filename=${filename}`, {
-        method: 'POST',
-        body: content,
-    })
-    .then((response) => {
-        if (response.ok) {
-            console.log('Auto-save successful.');
-            return true;
+// --- Toast System ---
+function showToast(message, type = 'info') {
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i>
+        <span>${message}</span>
+    `;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(20px)';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// --- View Shifting ---
+function showDashboard() {
+    currentFilename = null;
+    dashboardView.style.display = 'block';
+    notepadView.style.display = 'none';
+    editorActions.style.display = 'none';
+    
+    // Deselect all links
+    document.querySelectorAll('.note-link').forEach(link => link.classList.remove('selected-link'));
+    document.title = 'imemo - dashboard';
+}
+
+function showEditor() {
+    dashboardView.style.display = 'none';
+    notepadView.style.display = 'block';
+    editorActions.style.display = 'flex';
+}
+
+function toggleSidebar(hide) {
+    if (hide) {
+        document.body.classList.add('sidebar-collapsed');
+    } else {
+        document.body.classList.remove('sidebar-collapsed');
+    }
+}
+
+// --- API Calls ---
+async function loadNote(filename) {
+    try {
+        const response = await fetch(`/load-file?filename=${filename}`);
+        if (!response.ok) throw new Error('Failed to load');
+        const content = await response.text();
+        
+        showEditor();
+        
+        // Handle both HTML and plain text for backward compatibility
+        if (content.startsWith('<')) {
+            quill.root.innerHTML = content;
         } else {
-            console.error('Auto-save failed.');
-            return false;
+            quill.setText(content);
         }
-    })
-    .catch((error) => {
-        console.error('Error saving file:', error);
+        
+        currentFilename = filename;
+        updateActiveLink(filename);
+        document.title = `imemo - ${filename.replace('.txt', '')}`;
+        if (isMobile) toggleSidebar(true); // Auto-hide on mobile
+        showToast(`Loaded ${filename}`);
+    } catch (error) {
+        showToast('Error loading note', 'error');
+    }
+}
+
+async function saveNote() {
+    if (!currentFilename) return;
+    const content = quill.root.innerHTML;
+    try {
+        const response = await fetch(`/save-file?filename=${currentFilename}`, {
+            method: 'POST',
+            body: content
+        });
+        if (!response.ok) throw new Error('Save failed');
+        console.log('Saved successfully');
+        return true;
+    } catch (error) {
+        showToast('Auto-save failed', 'error');
         return false;
+    }
+}
+
+function debounceSaveContent() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(saveNote, DEBOUNCE_DELAY);
+}
+
+// --- Sidebar & Navigation ---
+function updateActiveLink(filename) {
+    document.querySelectorAll('.note-link').forEach(link => {
+        if (link.getAttribute('data-filename') === filename) {
+            link.classList.add('selected-link');
+        } else {
+            link.classList.remove('selected-link');
+        }
     });
 }
 
-function debounceSaveContent(content, filename) {
-    clearTimeout(debounceTimer);
-    debounceTimer = setTimeout(() => {
-        saveContent(content, filename)
-            .then((success) => {
-                if (!success) {
-                    showAutosaveFailedPopup();
-                } else {
-                    hideAutosaveFailedPopup();
-                }
-            });
-    }, DEBOUNCE_DELAY);
-}
-
-function showAutosaveFailedPopup() {
-    const autosaveFailedPopup = document.getElementById('autosave-failed-popup');
-    autosaveFailedPopup.style.display = 'block';
-}
-
-function hideAutosaveFailedPopup() {
-    const autosaveFailedPopup = document.getElementById('autosave-failed-popup');
-    autosaveFailedPopup.style.display = 'none';
-}
-
-const closeAutosaveFailedButton = document.getElementById('close-autosave-failed-popup');
-closeAutosaveFailedButton.addEventListener('click', hideAutosaveFailedPopup);
-
-window.addEventListener('online', () => {
-    hideAutosaveFailedPopup();
+// --- Event Listeners ---
+sidebarSearch.addEventListener('input', (e) => {
+    const term = e.target.value.toLowerCase();
+    document.querySelectorAll('.note-link').forEach(link => {
+        const name = link.textContent.toLowerCase();
+        link.style.display = name.includes(term) ? 'flex' : 'none';
+    });
 });
 
-window.addEventListener('offline', () => {
-    showAutosaveFailedPopup();
-});
-
-notepadTextarea.addEventListener('input', (e) => {
-    const content = e.target.value;
-
-    if (currentFilename) {
-        debounceSaveContent(content, currentFilename);
-    }
-});
-
-function setPageTitle(filename) {
-    const nameWithoutExtension = filename.replace('.txt', '');
-    document.title = `imemo - ${nameWithoutExtension}`;
-}
-
-function focusContent() {
-    if (isMobile) {
-        content.style.display = 'block';
-        sidebar.style.transform = 'translateX(-500px)';
-        content.style.marginLeft = '0';
-        showSidebarButton.style.display = 'block';
-        topbar.style.display = 'flex';
-    }
-}
-
-function highlightSelectedLink(link) {
-    try {
-        noteLinks.forEach((element) => {
-            element.classList.remove('selected-link');
-        });
-
-        link.classList.add('selected-link');
-        const fileIcon = link.querySelector('.fab.fa-pagelines');
-        fileIcon.classList.remove('fab', 'fa-pagelines');
-        fileIcon.classList.add('fa-solid', 'fa-spinner', 'fa-spin');
-
-    } catch (error) {
-        removeLoading(link);
-        highlightSelectedLink(link);
-    }
-}
-
-function removeLoading(link) {
-    const fileIcon = link.querySelector('.fa-solid.fa-spinner.fa-spin');
-    fileIcon.classList.remove('fa-solid', 'fa-spinner', 'fa-spin');
-    fileIcon.classList.add('fab', 'fa-pagelines');
-}
-
-noteLinks.forEach((link) => {
+document.querySelectorAll('.note-link').forEach(link => {
     link.addEventListener('click', (e) => {
         e.preventDefault();
-
-        const filename = link.getAttribute('data-filename');
-        highlightSelectedLink(link);
-        fetch(`/load-file?filename=${filename}`)
-            .then((response) => response.text())
-            .then((content) => {
-                notepadTextarea.value = content;
-                currentFilename = filename; // Update the current file
-                setPageTitle(filename);
-                focusContent();
-                removeLoading(link);
-            })
-            .catch((error) => {
-                console.error('Error loading file:', error);
-            });
+        loadNote(link.getAttribute('data-filename'));
     });
 });
 
-newNoteButton.addEventListener('click', (e) => {
+showSidebarButton.addEventListener('click', () => toggleSidebar(false));
+hideSidebarButton.addEventListener('click', () => toggleSidebar(true));
+homeButton.addEventListener('click', (e) => {
     e.preventDefault();
+    showDashboard();
+    toggleSidebar(true); // Auto-hide on mobile/tablet when going home
 });
 
-saveButton.addEventListener('click', () => {
-    const content = notepadTextarea.value;
-    if (currentFilename) {
-        fetch(`/save-file?filename=${currentFilename}`, {
-            method: 'POST',
-            body: content,
-        })
-        .then((response) => {
-            if (response.ok) {
-                alert('File saved successfully.');
-            } else {
-                alert('Error saving file.');
-            }
-        })
-        .catch((error) => {
-            console.error('Error saving file:', error);
-        });
-    }
+saveButton.addEventListener('click', async () => {
+    const success = await saveNote();
+    if (success) showToast('Saved manually');
 });
 
-const newNoteModal = document.getElementById('new-note-modal');
-const createNoteButton = document.getElementById('create-note-button');
-const closeModalButton = document.getElementById('close-modal');
+syncButton.addEventListener('click', () => location.reload());
 
-newNoteButton.addEventListener('click', () => {
-    newNoteModal.style.display = 'block';
-});
-
-closeModalButton.addEventListener('click', () => {
-    newNoteModal.style.display = 'none';
-});
-
-window.addEventListener('click', (event) => {
-    if (event.target === newNoteModal) {
-        newNoteModal.style.display = 'none';
-    }
-});
-
-createNoteButton.addEventListener('click', () => {
-    const title = document.getElementById('note-title').value;
-
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/create_note', true);
-    xhr.setRequestHeader('Content-Type', 'application/json');
-    const data = JSON.stringify({ title: title });
-    xhr.send(data);
-
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4 && xhr.status === 200) {
-            document.getElementById('note-title').value = '';
-            newNoteModal.style.display = 'none';
-            location.reload();
-        } else if (xhr.readyState === 4 && xhr.status !== 200) {
-            alert('Error creating note. Please try again.');
-        }
-    };
-});
-
-showSidebarButton.addEventListener('click', () => {
-    sidebar.style.transform = 'translateX(0)';
-    content.style.marginLeft = '230px';
-    showSidebarButton.style.display = 'none';
-    content.style.display = 'block';
-    if (isMobile) {
-        topbar.style.display = 'none';
-    }
-});
-
-hideSidebarButton.addEventListener('click', () => {
-    content.style.display = 'block';
-    sidebar.style.transform = 'translateX(-500px)';
-    content.style.marginLeft = '0';
-    showSidebarButton.style.display = 'block';
-    if (isMobile) {
-        topbar.style.display = 'block';
-        topbar.style.display = 'flex';
-    }
-});
-
-document.getElementById('note-textarea').addEventListener('keydown', function (e) {
-    if (e.key === 'Tab') {
+// Keyboard Shortcuts
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
-        var start = this.selectionStart;
-        var end = this.selectionEnd;
-
-        document.execCommand('insertText', false, '\t');
-        this.selectionStart = this.selectionEnd = start + 1;
+        saveNote().then(success => { if (success) showToast('Saved'); });
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
+        e.preventDefault();
+        sidebarSearch.focus();
     }
 });
+
+// --- Modal Handlers (Existing logic updated) ---
+const newNoteModal = document.getElementById('new-note-modal');
+const renameModal = document.getElementById('rename-modal');
+const confirmationModal = document.getElementById('confirmation-modal');
+
+newNoteButton.addEventListener('click', () => newNoteModal.style.display = 'flex');
+renameButton.addEventListener('click', () => {
+    if (!currentFilename) return showToast('Select a note first');
+    document.getElementById('new-filename').value = currentFilename;
+    renameModal.style.display = 'flex';
+});
+
+deleteButton.addEventListener('click', () => {
+    if (!currentFilename) return showToast('Select a note first');
+    document.getElementById('confirmation-message').textContent = `Are you sure you want to delete "${currentFilename}"?`;
+    confirmationModal.style.display = 'flex';
+});
+
+// Close buttons for all modals
+document.querySelectorAll('.close-button, #cancel-delete-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+        newNoteModal.style.display = 'none';
+        renameModal.style.display = 'none';
+        confirmationModal.style.display = 'none';
+        document.getElementById('url-modal').style.display = 'none';
+    });
+});
+
+// Real logic for Create, Rename, Delete
+const createNoteConfirm = document.getElementById('create-note-button');
+createNoteConfirm.addEventListener('click', async () => {
+    const title = document.getElementById('note-title').value;
+    if (!title) return;
+    try {
+        const response = await fetch('/create_note', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ title })
+        });
+        if (response.ok) location.reload();
+    } catch (error) {
+        showToast('Error creating note', 'error');
+    }
+});
+
+document.getElementById('rename-confirm-button').addEventListener('click', async () => {
+    const newName = document.getElementById('new-filename').value;
+    if (!newName) return;
+    try {
+        const response = await fetch(`/rename-file?oldFilename=${currentFilename}&newFilename=${newName}`);
+        if (response.ok) location.reload();
+    } catch (error) {
+        showToast('Error renaming note', 'error');
+    }
+});
+
+document.getElementById('confirm-delete-button').addEventListener('click', async () => {
+    try {
+        const response = await fetch(`/delete-file?filename=${currentFilename}`);
+        if (response.ok) location.reload();
+    } catch (error) {
+        showToast('Error deleting note', 'error');
+    }
+});
+
+// --- Link Extraction (Improved) ---
+linkButton.addEventListener('click', () => {
+    const text = quill.getText();
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    const urls = text.match(urlRegex) || [];
+    
+    if (urls.length === 0) return showToast('No links found');
+    
+    const urlList = document.getElementById('url-list');
+    urlList.innerHTML = '';
+    
+    [...new Set(urls)].forEach(url => {
+        const div = document.createElement('div');
+        div.className = 'url-item';
+        div.innerHTML = `
+            <span class="url-text">${url}</span>
+            <div class="url-actions">
+                <button class="icon-button" onclick="window.open('${url}', '_blank')"><i class="fas fa-external-link-alt"></i></button>
+                <button class="icon-button" onclick="navigator.clipboard.writeText('${url}'); showToast('Copied!')"><i class="far fa-copy"></i></button>
+            </div>
+        `;
+        urlList.appendChild(div);
+    });
+    
+    document.getElementById('url-modal').style.display = 'flex';
+});
+
+// --- Initialize ---
+document.addEventListener('DOMContentLoaded', () => {
+    initQuill();
+    showDashboard();
+});
+
+// PWA Service Worker & Install Logic
+let deferredPrompt;
+const installButton = document.getElementById('sidebar-install-button');
+const installModal = document.getElementById('install-modal');
+const closeInstallModal = document.getElementById('close-install-modal');
+const installConfirmButton = document.getElementById('install-confirm-button');
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('service-worker.js')
-            .then((registration) => {
-                console.log('Service Worker registered with scope:', registration.scope);
-            })
-            .catch((error) => {
-                console.error('Service Worker registration failed:', error);
-            });
+            .catch(error => console.error('SWorker failed:', error));
     });
 }
-
-let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent Chrome 67 and earlier from automatically showing the prompt
     e.preventDefault();
+    // Stash the event so it can be triggered later.
     deferredPrompt = e;
-    showInstallButton();
-});
-
-function showInstallButton() {
-    const installButton = document.getElementById('install-button');
+    // Update UI notify the user they can add to home screen
     if (installButton) {
-        installButton.style.display = 'block';
-        installButton.addEventListener('click', () => {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choiceResult) => {
-                if (choiceResult.outcome === 'accepted') {
-                    console.log('User accepted the installation');
-                } else {
-                    console.log('User dismissed the installation');
-                }
-                deferredPrompt = null;
-                installButton.style.display = 'none';
-            });
-        });
-    }
-}
-
-function openRenameModal() {
-    const renameModal = document.getElementById('rename-modal');
-    renameModal.style.display = 'block';
-
-    const currentFilenameElement = document.querySelector('.selected-link');
-    const currentFilename = currentFilenameElement.textContent.trim();
-    const newFilenameInput = document.getElementById('new-filename');
-    newFilenameInput.value = currentFilename;
-}
-
-function closeRenameModal() {
-    const renameModal = document.getElementById('rename-modal');
-    renameModal.style.display = 'none';
-}
-
-const renameButton = document.getElementById('rename-button');
-renameButton.addEventListener('click', openRenameModal);
-
-const closeRenameModalButton = document.getElementById('close-rename-modal');
-closeRenameModalButton.addEventListener('click', closeRenameModal);
-
-const renameConfirmButton = document.getElementById('rename-confirm-button');
-renameConfirmButton.addEventListener('click', () => {
-    const newFilenameInput = document.getElementById('new-filename');
-    const newFilename = newFilenameInput.value.trim();
-
-    if (newFilename !== "") {
-        fetch(`/rename-file?oldFilename=${currentFilename}&newFilename=${newFilename}`)
-            .then((response) => {
-                if (response.ok) {
-                    alert('File renamed successfully.');
-                    closeRenameModal();
-                    location.reload();
-                } else {
-                    alert('Error renaming file.');
-                }
-            })
-            .catch((error) => {
-                console.error('Error renaming file:', error);
-            });
-    } else {
-        alert('Please enter a valid filename.');
+        installButton.style.display = 'flex';
     }
 });
 
-function openConfirmationPopup(filename) {
-    const confirmationModal = document.getElementById('confirmation-modal');
-    confirmationModal.style.display = 'block';
-
-    const confirmationMessage = document.getElementById('confirmation-message');
-    confirmationMessage.textContent = `Are you sure you want to delete "${filename}"? This action cannot be undone.`;
-}
-
-function closeConfirmationPopup() {
-    const confirmationModal = document.getElementById('confirmation-modal');
-    confirmationModal.style.display = 'none';
-}
-
-const deleteButton = document.getElementById('delete-button');
-deleteButton.addEventListener('click', () => {
-    const currentFilenameElement = document.querySelector('.selected-link');
-    if (!currentFilenameElement) {
-        alert('No file selected to delete.');
-        return;
-    }
-
-    const currentFilename = currentFilenameElement.getAttribute('data-filename');
-    openConfirmationPopup(currentFilename);
-});
-
-const confirmDeleteButton = document.getElementById('confirm-delete-button');
-confirmDeleteButton.addEventListener('click', () => {
-    const currentFilenameElement = document.querySelector('.selected-link');
-    closeConfirmationPopup();
-    if (!currentFilenameElement) {
-        alert('No file selected to delete.');
-        return;
-    }
-
-    const currentFilename = currentFilenameElement.getAttribute('data-filename');
-
-    fetch(`/delete-file?filename=${currentFilename}`)
-        .then((response) => {
-            if (response.ok) {
-                alert('File deleted successfully.');
-                location.reload();
-            } else {
-                alert('Error deleting file.');
-            }
-        })
-        .catch((error) => {
-            console.error('Error deleting file:', error);
-        });
-});
-
-const cancelDeleteButton = document.getElementById('cancel-delete-button');
-cancelDeleteButton.addEventListener('click', closeConfirmationPopup);
-
-const closeConfirmationModalButton = document.getElementById('close-confirmation-modal');
-closeConfirmationModalButton.addEventListener('click', closeConfirmationPopup);
-
-function refreshPage() {
-    location.reload();
-}
-
-const syncButton = document.getElementById('sync-button');
-syncButton.addEventListener('click', refreshPage);
-
-const linkButton = document.getElementById('link-button');
-
-linkButton.addEventListener('click', () => {
-    const noteContent = notepadTextarea.value;
-    const urls = extractURLs(noteContent);
-
-    if (urls.length > 0) {
-        showURLModal(urls);
-    } else {
-        alert('No URLs found in the note.');
-    }
-});
-
-function extractURLs(text) {
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    return text.match(urlRegex) || [];
-}
-
-function showURLModal(urls) {
-    const urlModal = document.getElementById('url-modal');
-    const urlList = document.getElementById('url-list');
-
-    urlList.innerHTML = ''; // Clear the URL list
-
-    urls.forEach(url => {
-        const urlItem = document.createElement('div');
-        urlItem.className = 'url-item';
-        urlItem.innerHTML = `
-            <span style="flex-grow: 1;">${url}</span>
-            <button class="url-button" onclick="copyURL('${url}')">
-                <i class="far fa-copy"></i>
-            </button>
-            <button class="url-button" onclick="openURL('${url}')">
-                <i class="fas fa-external-link-alt"></i>
-            </button>
-        `;
-        urlList.appendChild(urlItem);
+if (installButton) {
+    installButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        installModal.style.display = 'flex';
     });
-
-    urlModal.style.display = 'block';
 }
 
-function closeURLModal() {
-    const urlModal = document.getElementById('url-modal');
-    urlModal.style.display = 'none';
+if (closeInstallModal) {
+    closeInstallModal.addEventListener('click', () => {
+        installModal.style.display = 'none';
+    });
 }
 
-function copyURL(url) {
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(url)
-            .then(() => {
-                alert('URL copied to clipboard: ' + url);
-            })
-            .catch(err => {
-                console.error('Failed to copy URL: ', err);
-                alert('Failed to copy URL. You can manually copy the URL: ' + url);
-            });
-    } else {
-        alert('Clipboard API is not supported in your browser. You can manually copy the URL: ' + url);
-    }
+if (installConfirmButton) {
+    installConfirmButton.addEventListener('click', async () => {
+        installModal.style.display = 'none';
+        if (!deferredPrompt) {
+            showToast('Install prompt not available.', 'error');
+            return;
+        }
+        
+        // Show the prompt
+        deferredPrompt.prompt();
+        
+        // Wait for the user to respond to the prompt
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            installButton.style.display = 'none';
+        }
+        // We've used the prompt, and can't use it again, throw it away
+        deferredPrompt = null;
+    });
 }
 
-function openURL(url) {
-    window.open(url, '_blank');
-}
+window.addEventListener('appinstalled', () => {
+    if (installButton) installButton.style.display = 'none';
+    deferredPrompt = null;
+    showToast('App installed successfully!', 'success');
+});
