@@ -1,76 +1,132 @@
-IMEMO 📓
-Welcome to IMEMO - a private online notepad designed to keep your notes secure. Whether you're tracking daily tasks or keeping sensitive information safe, IMEMO provides a secure and private space for your notes.
+# <p align="center">📓 IMEMO</p>
 
-🅸🅼🅴🅼🅾
+<p align="center">
+  <img src="assets/banner.png" alt="IMEMO Banner" width="800">
+</p>
 
-About the Author ✨
-Rafael Lachica/ Lachicus – The creator behind IMEMO. This project is an opportunity to dive into Flask and Python, demonstrating how to build secure web applications.
+<p align="center">
+  <strong>Your private online notepad, reimagined for security and simplicity.</strong>
+</p>
 
-Purpose 🎯
-IMEMO serves as a private online notepad with a focus on security. It’s designed to help users manage their notes safely while learning Flask and Python.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/Flask-000000?style=for-the-badge&logo=flask&logoColor=white" alt="Flask">
+  <img src="https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase">
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel">
+  <img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License">
+</p>
 
-Features 🚀
-Create and Edit Notes: Easily create new notes or edit existing ones with a user-friendly interface.
-Secure Storage: Your notes are kept safe and private, ensuring confidentiality.
-Manage Notes: Organize your notes with ease – save, load, rename, and delete as needed.
+---
 
-Technology Stack 🔧
-Flask: A micro web framework for Python.
-Python: The programming language used for this application.
+## 🌟 Overview
 
+**IMEMO** is a sophisticated, secure, and private online notepad designed to protect your sensitive information. Built with a focus on ease of use and modern aesthetics, IMEMO allows you to keep your daily tasks, ideas, and secrets stored safely in the cloud.
 
-Getting Started 🛠️
+---
 
-Prerequisites
-Python 3.8 or higher
-pip (Python package installer)
+## ✨ Key Features
 
-Installation
-Clone the Repository:
+- 🔒 **Secure Access**: Protected by a customizable passcode to ensure only you can access your notes.
+- ☁️ **Cloud Storage**: Powered by **Firebase Firestore**, ensuring your notes are always available and synchronized.
+- 📝 **Dynamic Editing**: Seamlessly create, read, update, and delete notes with a glassmorphic user interface.
+- 🌓 **Modern UI**: A premium dark-mode aesthetic with micro-interactions and smooth transitions.
+- 📱 **PWA Ready**: Install IMEMO on your mobile device or desktop for a native-like experience.
+- ⚡ **Auto-Save**: Never lose a thought again with reliable backend persistence.
 
-``` bash
-  Copy code
-  git clone https://github.com/Lachicus/imemo.git
-  cd imemo
-  Set Up a Virtual Environment:~~~
-```
+---
 
-``` bash
-Copy code
-python -m venv .venv
-Activate the Virtual Environment:
-```
+## 🛠️ Technology Stack
 
-On Windows:
-``` bash
-Copy code
-.venv\Scripts\activate
-On macOS/Linux:
-bash
-Copy code
-source .venv/bin/activate
-Install Dependencies:
-```
+| Component | Technology |
+| :--- | :--- |
+| **Backend** | [Python](https://www.python.org/) & [Flask](https://flask.palletsprojects.com/) |
+| **Database** | [Google Firebase Firestore](https://firebase.google.com/products/firestore) |
+| **Frontend** | Vanilla JS, CSS3 (Glassmorphism), HTML5 |
+| **Deployment** | [Vercel](https://vercel.com/) |
+| **PWA** | Service Workers & Web Manifests |
 
-``` bash
-Copy code
-pip install -r requirements.txt
-Run the Application:
-```
+---
 
-Usage 📋
-Create a Note: Click on "Create Note" in the sidebar and enter a title.
-Edit a Note: Click on any note in the sidebar to start editing.
-Save Changes: Click the save button to save your progress.
-Logout: Click the logout button to end your session.
-Screenshots 📸
+## 🚀 Getting Started
 
-Contributing 🤝
-Contributions are welcome! If you have suggestions or improvements, please open an issue or submit a pull request.
+### 📋 Prerequisites
 
-License 📜
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Python 3.8+**
+- **Firebase Account** (for Firestore credentials)
+- **Pip** (Python package manager)
 
-Contact 📫
-For any questions or feedback, reach out to me at lachicarfl05@gmail.com
+### ⚙️ Installation
 
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/Lachicus/imemo.git
+   cd imemo
+   ```
+
+2. **Set up a Virtual Environment**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Environment Configuration**
+   Create a `.env` file in the root directory and add your credentials:
+   ```env
+   FIREBASE_TYPE=service_account
+   FIREBASE_PROJECT_ID=your_id
+   FIREBASE_PRIVATE_KEY_ID=your_key_id
+   FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+   FIREBASE_CLIENT_EMAIL=your_email
+   FIREBASE_CLIENT_ID=your_id
+   ...
+   passcode=your_secret_passcode
+   encrypted_key=your_flask_secret_key
+   ```
+
+5. **Run the Engine**
+   ```bash
+   python main.py
+   ```
+   Visit `http://localhost:81` to start noting!
+
+---
+
+## 📸 Screenshots
+
+<p align="center">
+  <i>(Add your own screenshots here to showcase your unique UI!)</i>
+</p>
+
+---
+
+## 🤝 Contributing
+
+Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+
+1. Fork the Project
+2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the Branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+---
+
+## 📜 License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+## 📫 Contact
+
+**Rafael Lachica (Lachicus)**  
+📧 [Email](mailto:lachicarfl05@gmail.com) | 🐙 [GitHub](https://github.com/Lachicus)
+
+<p align="center">
+  Made with 💜 by <a href="https://github.com/Lachicus">Rafael Lachica</a>
+</p>
